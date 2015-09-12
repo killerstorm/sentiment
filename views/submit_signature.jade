@@ -1,0 +1,24 @@
+doctype html
+html(lang="en")
+  head
+    title Sentiment: submit signature
+  body
+    h1 
+      a(href='/') Sentiment
+    if was_added
+       p Your message was successfully added.
+    if error
+       p Sorry, this signature looks wrong. Try again?
+    h3 submit a signature to support a message
+    p You need to sign the following text with a Bitcoin address which has non-zero balance:
+    p
+      input(name='statement',value=statement, size=82, readonly)
+    form(method='POST')
+       input(type='hidden', name='hash', value=hash)
+       | Address:
+       input(name='address')
+       br
+       | Signature:
+       input(name='signature')
+       input(type='submit', value='submit')
+    p

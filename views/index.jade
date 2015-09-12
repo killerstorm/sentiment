@@ -1,0 +1,17 @@
+doctype html
+html(lang="en")
+  head
+    title Sentiment
+  body
+    h1 Sentiment
+    p is a bulletin board which uses Bitcoin for a Sybil-attack-resistant message ranking. User which supports a particular message can sign its hash using one of his addresses which holds some amount of bitcoins and submit this signature to Sentiment. Sentiment collects all signatures, computers a total amount of bitcoins which support a particular message and uses that for ranking. The idea is that this ranking corresponds to the sentiment of Bitcoin users weighted by the amount of bitcoins they own.
+    if signature_added
+       p Your signature was added, data will be processed shortly.
+    p
+      a(href='submit_message') Submit new message
+    each message in messages
+       p "#{message.text}"
+       p 
+          | score: #{message.score}
+          br
+          a(href=message.support_link) Support!
