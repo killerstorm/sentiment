@@ -1,0 +1,24 @@
+{
+  "name": "sentiment",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bitcore": "^0.13.3",
+    "bitcore-message": "^0.12.0",
+    "blockchainjs": "git://github.com/chromaway/blockchainjs.git#develop",
+    "bluebird": "^2.10.0",
+    "lodash": "^3.10.1",
+    "pg": "^4.3.0",
+    "pg-native": "^1.9.0",
+
+    "body-parser": "^1.12.4",
+    "express": "^4.12.3",
+    "jade": "^1.9.2"
+  }
+}
