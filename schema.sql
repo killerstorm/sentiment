@@ -1,13 +1,15 @@
 CREATE TABLE messages ( 
   hash TEXT PRIMARY KEY,
-  message TEXT NOT NULL
+  message TEXT NOT NULL,
+  serial_id SERIAL
 );
 
 CREATE TABLE signatures (
   address TEXT NOT NULL,
   verb TEXT NOT NULL,
   signature TEXT NOT NULL,
-  message_hash TEXT REFERENCES messages (hash)
+  message_hash TEXT REFERENCES messages (hash),
+  serial_id SERIAL
 );
 
 CREATE UNIQUE INDEX ON signatures (message_hash, address, verb);
@@ -21,6 +23,7 @@ CREATE TABLE address_balances (
   last_block_hash TEXT
 );
 
+-- UPSERT
 
 CREATE FUNCTION update_address_balance(_address TEXT, _balance BIGINT)
    RETURNS VOID AS

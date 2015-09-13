@@ -1,0 +1,16 @@
+doctype html
+html(lang="en")
+  include ./head.jade
+  body
+    h1 
+      a(href='/') Sentiment
+    h6 Message details:
+    p "#{message.text}"
+    p 
+      | score: #{message.score}
+      br
+      a(href=message.support_link) Support!
+      br
+      | Votes:
+      each vote in votes
+        p #{vote.balance} satoshi #{vote.address} <small>#{vote.signature}</small>

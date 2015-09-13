@@ -18,6 +18,7 @@ exports.verifySignature = function (address, signature, statement) {
 }
 
 var connector = new blockchainjs.connector.Chromanode()
+exports.connector = connector
 
 exports.computeAddressBalance = function (address) {
   return connector.addressesQuery([address], {status: 'unspent'})

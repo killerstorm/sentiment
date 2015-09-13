@@ -1,5 +1,6 @@
 var Promise = require('bluebird')
 var pg = Promise.promisifyAll(require('pg'))
+var _ = require('lodash')
 
 function Storage (opts) {
   this._url = opts.url
@@ -26,9 +27,21 @@ Storage.prototype.updateAddressBalance = function (address, balance) {
 
 Storage.prototype.getVotes = function (message_hash, verb) {
   return this.executeQuery(
-    "SELECT address, balance FROM signatures INNER JOIN address_balances USING (address)"
-    + "WHERE message_hash = $1 AND verb = $2"
-    [message_hash, verb])
+    "SELECT address, balance, signature FROM signatures INNER JOIN address_balances USING (address) "
+    + "WHERE message_hash = $1 AND verb = $2",
+    [message_hash, verb]).then(function (res) {
+      return res.rows
+    })
+}
+
+Storage.prototype.getAllAddresses = function () {
+  // select addresses from signatures because
+  // an address_balances entries might not exist
+  return this.executeQuery(
+    "SELECT DISTINCT address FROM signatures", []    
+  ).then(function(res) {
+    return _.pluck(res.rows, 'address')
+  })
 }
 
 Storage.prototype.getMessageByHash = function (message_hash) {
@@ -40,6 +53,16 @@ Storage.prototype.getMessageByHash = function (message_hash) {
       return res.rows[0].message
     else
       return null
+  })
+}
+
+Storage.prototype.getNewMessages = function () {
+  return this.executeQuery(
+    "SELECT message, hash FROM messages "
+    + "LEFT JOIN signatures ON hash = message_hash "
+    + "WHERE address IS NULL")
+  .then(function (res) {
+    return res.rows
   })
 }
 

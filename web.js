@@ -3,17 +3,21 @@ var bodyParser = require('body-parser');
 var app = express();
 var Storage = require('./storage')
 var core = require('./core')
+var Promise = require('bluebird')
+var BalanceMonitor = require('./balmon')
+var config = require('./config')
+var _ = require('lodash')
 
-var storage = new Storage({url: "postgres://alex:dddd@localhost:5432/sentiment"})
+var storage = new Storage({url: config.postgres_url})
 
 app.set('view engine', 'jade');
 app.use(bodyParser.urlencoded({extended: false}));
 
+var balmon = new BalanceMonitor(storage, core.connector)
+balmon.init()
+
 function perhapsProcessAddress(address) {
-  // update address balance
-  return core.computeAddressBalance(address).then(function (balance) {
-    return storage.updateAddressBalance(address, balance)
-  })
+  balmon.updateAddressBalance(address, true)
 }
 
 function errorHandler(res) {
@@ -23,32 +27,69 @@ function errorHandler(res) {
   })
 }
 
-app.get('/', function (req, res) {  
-  storage.getTopMessages('support', 25).then(function (res) {
-    console.log(res)
-    return res
-  }).map(function (message_score) {
+function formatMessage(hash, score, message) {
+  if (score) {
+    score = (parseInt(score) / 100000000).toString()
+  }
+  return {
+    text: JSON.parse(message).text, 
+    score: score || "0",
+    hash: hash,
+    details_link: '/message_details?hash=' + hash,
+    support_link: '/submit_signature?hash=' + hash
+  }   
+}
+
+app.get('/', function (req, res) {
+  var topMessages = storage.getTopMessages('support', 25)
+  .map(function (message_score) {
     return storage.getMessageByHash(message_score.message_hash).then(function (message) {
-      var hash = message_score.message_hash
-      return {
-        text: JSON.parse(message).text, 
-        score: message_score.score || "0",
-        hash: hash,
-        support_link: '/submit_signature?hash=' + hash
-      }
+      return formatMessage(message_score.message_hash,
+                           message_score.score,
+                           message)
     })
-  }).then(
-    function (messages) {
+  })
+  var newMessages = storage.getNewMessages().map(function (msg) {
+    return formatMessage(msg.hash, "0", msg.message)
+  })
+
+  Promise.join(topMessages, newMessages,
+    function (topMessages, newMessages) {
+      return topMessages.concat(newMessages)
+    })
+  .then(function (messages) {
       res.render('index', {
-        messages: messages, 
-        signature_added: req.query.signature_added
+        messages: messages
       })
     }, errorHandler(res)
   )
 })
 
+app.get('/message_details', function (req, res) {
+  var hash = req.query.hash
+  if (!hash) return res.redirect('/')
+  Promise.all([storage.getMessageByHash(hash),
+               storage.getVotes(hash, 'support')])
+  .then(
+      function (data) {
+        var message = data[0]
+        var votes = data[1]
+        var score = _.sum(_.pluck(votes, 'balance'))
+        res.render('message_details', {
+            message: formatMessage(hash, score, message),
+            votes: votes
+        })
+      }, 
+      errorHandler(res)
+  )
+})
+
 app.get('/show_message', function (req, res) {
-    res.render('show_message', { message: req.query.message })   
+    var message = ''
+    if (req.query.message == 'sigadd') {
+      message = "A signature is added. Data will be updated shortly."
+    }        
+    res.render('show_message', { message: message })   
 })
 
 app.get('/submit_message', function (req, res) { res.render('submit_message') })
@@ -60,11 +101,18 @@ app.post('/submit_message', function (req, res) {
     var message = JSON.stringify(messageObj)
     var hash = core.computeMessageHash(message)
     storage.getMessageByHash(hash).then(function (message) {
-                                          
+      if (message !== null)
+        return false
+      else 
+        return storage.insertMessage(message, hash).then(function () {
+          return true
+        })
     })
-    storage.insertMessage(message, hash).then(
-      function () {
-        res.redirect(303, '/submit_signature?hash=' + hash + "&added=1")    
+    .then(
+      function (added) {
+        var url = '/submit_signature?hash=' + hash
+        if (added) url += "&added=1"
+        res.redirect(303, url)    
       },  errorHandler(res)
     )
   } else {
@@ -91,7 +139,7 @@ app.post('/submit_signature', function (req, res) {
     storage.insertSignature(address, 'support', signature, hash).then(
       function () {
         perhapsProcessAddress(address)
-        res.redirect(303, "/show_message?message=signature%20added")
+        res.redirect(303, "/show_message?message=sigadd")
       }, errorHandler(res)
     )
   } else {
