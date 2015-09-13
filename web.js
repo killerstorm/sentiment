@@ -151,8 +151,8 @@ app.post('/submit_signature', function (req, res) {
   }
 })
 
-var server = app.listen(2222, function () {
-  console.log('listening on 2222');
+var server = app.listen(config.port, function () {
+  console.log('listening on ' + config.port);
 });
 
 
