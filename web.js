@@ -100,8 +100,8 @@ app.post('/submit_message', function (req, res) {
     var messageObj = {type: 'text', text: text}
     var message = JSON.stringify(messageObj)
     var hash = core.computeMessageHash(message)
-    storage.getMessageByHash(hash).then(function (message) {
-      if (message !== null)
+    storage.getMessageByHash(hash).then(function (existing_message) {
+      if (existing_message !== null)
         return false
       else 
         return storage.insertMessage(message, hash).then(function () {
