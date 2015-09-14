@@ -42,13 +42,15 @@ function formatMessage(hash, score, message) {
 
 app.get('/', function (req, res) {
   var topMessages = storage.getTopMessages('support', 25)
-  .map(function (message_score) {
+  .reduce(function (messages, message_score) {
     return storage.getMessageByHash(message_score.message_hash).then(function (message) {
-      return formatMessage(message_score.message_hash,
-                           message_score.score,
-                           message)
+      console.log(messages)
+      messages.push(formatMessage(message_score.message_hash,
+                                  message_score.score,
+                                  message))
+      return messages
     })
-  })
+  }, [])
   var newMessages = storage.getNewMessages().map(function (msg) {
     return formatMessage(msg.hash, "0", msg.message)
   })
