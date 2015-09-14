@@ -69,7 +69,7 @@ Storage.prototype.getNewMessages = function () {
 Storage.prototype.getTopMessages = function (verb, limit) {
   return this.executeQuery(
     "SELECT message_hash, score FROM message_scores "
-    + "WHERE verb = $1 ORDER BY score LIMIT $2"
+    + "WHERE verb = $1 ORDER BY score DESC LIMIT $2"
     [verb, limit]).then(function (res) {
       return res.rows
     })

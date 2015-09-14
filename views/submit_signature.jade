@@ -12,6 +12,11 @@ html(lang="en")
     p You need to sign the following text with a Bitcoin address which has non-zero balance:
     p
       input(name='statement',value=statement, size=82, readonly)
+      br
+      small
+        | Note: Signing a message with your private key might have some security and privacy implications,
+        | effectively the same as Bitcoin address reuse. Publishing signatures increases risk in case of 
+        | use of flawed wallet software or discovery of ECDSA vulnerabilities.
     form(method='POST')
        input(type='hidden', name='hash', value=hash)
        | Address:

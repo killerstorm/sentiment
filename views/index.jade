@@ -3,7 +3,7 @@ html(lang="en")
    include ./head.jade
    body
     h1 Sentiment
-    p is a bulletin board which uses Bitcoin for a Sybil-attack-resistant message ranking. User which supports a particular message can sign its hash using one of his addresses which holds some amount of bitcoins and submit this signature to Sentiment. Sentiment collects all signatures, computers a total amount of bitcoins which support a particular message and uses that for ranking. The idea is that this ranking corresponds to the sentiment of Bitcoin users weighted by the amount of bitcoins they own.
+    p is a bulletin board which uses Bitcoin for a Sybil-attack-resistant message ranking. User which supports a particular message can sign its hash using one of his addresses which holds some amount of bitcoins and submit this signature to Sentiment. Sentiment collects all signatures, computes the total amount of bitcoins which support a particular message and uses that for ranking. The idea is that this ranking corresponds to the sentiment of Bitcoin users weighted by the amount of bitcoins they own.
     p
       a(href='submit_message') Submit new message
     h6 Top & new messages: 
@@ -11,7 +11,7 @@ html(lang="en")
        p "#{message.text}"
        p
         small
-          | score: #{message.score}
+          | score: #{message.score} BTC
           br
           a(href=message.details_link) details
           | |
