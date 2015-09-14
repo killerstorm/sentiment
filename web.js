@@ -44,7 +44,6 @@ app.get('/', function (req, res) {
   var topMessages = storage.getTopMessages('support', 25)
   .reduce(function (messages, message_score) {
     return storage.getMessageByHash(message_score.message_hash).then(function (message) {
-      console.log(messages)
       messages.push(formatMessage(message_score.message_hash,
                                   message_score.score,
                                   message))
@@ -137,7 +136,12 @@ app.post('/submit_signature', function (req, res) {
   var signature = req.body.signature,
       hash = req.body.hash,
       address = req.body.address
-  if (core.verifySignature(address, signature, core.computeStatement(hash, 'support'))) {
+  var messageOK = false
+  try {
+    messageOK = core.verifySignature(address, signature, core.computeStatement(hash, 'support'))
+  } catch (x) { console.log(x)  }
+
+  if (messageOK) {
     storage.insertSignature(address, 'support', signature, hash).then(
       function () {
         perhapsProcessAddress(address)
